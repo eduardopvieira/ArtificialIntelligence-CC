@@ -18,8 +18,8 @@ public class Main {
                 { 1 }
         };
 
-        MLP rn = new MLP(2, 2, 1);
-        rn.treinar(entradasTreinamento, saidasTreinamento, 0.5, 10000);
+        MLP rn = new MLP(2, 3, 1);
+        rn.treinar(entradasTreinamento, saidasTreinamento, 0.2, 10000);
 
         for (double[] entrada : entradasTreinamento) {
             double[] saida = rn.propagacaoFrente(entrada);
