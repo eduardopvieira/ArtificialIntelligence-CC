@@ -23,7 +23,8 @@ public class Main {
 
         for (double[] entrada : entradasTreinamento) {
             double[] saida = rn.propagacaoFrente(entrada);
-            System.out.println("Entrada: " + entrada[0] + ", " + entrada[1] + " -> Saída prevista: " + saida[0]);
+            System.out.println("Entrada: " + (int) entrada[0] + ", " + (int) entrada[1] + " -> Saída prevista: " + saida[0]);
+            System.out.println("Resultado: " + (saida[0] > 0.5 ? "1" : "0"));
         }
     }
 }
