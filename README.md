@@ -1,7 +1,3 @@
-# Nome do Repositório
-
-**Nome sugerido:** `INTELIGENCIA-ARTIFICIAL-CC`
-
 ## Descrição
 
 Este repositório contém um projeto de Inteligência Artificial que combina um Perceptron de Múltiplas Camadas (MLP) e Algoritmo Genético do Curso de Ciência da Computação. O objetivo do projeto é explorar a integração de técnicas para resolver problemas complexos, como a simulação da função XOR, otimização de redes neurais e outras tarefas relacionadas à IA.
