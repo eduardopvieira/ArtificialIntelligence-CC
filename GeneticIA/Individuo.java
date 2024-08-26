@@ -39,10 +39,22 @@ public class Individuo {
 
     // Seleção dos melhores indivíduos aleatórios para cruzamento
     public static Individuo selecionarIndividuo(ArrayList<Individuo> populacao) {
-        // Torneio de seleção: escolhe o melhor entre dois indivíduos aleatórios
         Random random = new Random();
-        Individuo individuo1 = populacao.get(random.nextInt(populacao.size()));
-        Individuo individuo2 = populacao.get(random.nextInt(populacao.size()));
+        Individuo individuo1;
+        Individuo individuo2;
+
+        // Seleciona o primeiro indivíduo aleatoriamente
+        individuo1 = populacao.get(random.nextInt(populacao.size()));
+        // System.out.println("Individuo 1: " + individuo1.getX() + " " + individuo1.getY());
+
+        // Seleciona o segundo indivíduo aleatoriamente, garantindo que seja diferente do primeiro
+        do {
+            individuo2 = populacao.get(random.nextInt(populacao.size()));
+        } while (individuo2.equals(individuo1));
+
+        // System.out.println("Individuo 2: " + individuo2.getX() + " " + individuo2.getY());
+
+        // Retorna o melhor indivíduo com base no fitness
         return (individuo1.getFitness() < individuo2.getFitness()) ? individuo1 : individuo2;
     }
 

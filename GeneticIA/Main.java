@@ -3,7 +3,7 @@ import java.util.ArrayList;
 public class Main {
     public static void main(String[] args) {
 
-        AlgoritmoGenetico ag = new AlgoritmoGenetico(10, 10, 0.01);
+        AlgoritmoGenetico ag = new AlgoritmoGenetico(10, 15, 0.15);
 
         for (int index = 0; index < ag.populacao.size(); index++) {
             Individuo individuo = ag.populacao.get(index);
@@ -18,7 +18,12 @@ public class Main {
             // Seleção, cruzamento e mutação
             for (int i = 0; i < ag.populacaoInicial; i++) {
                 Individuo pai = Individuo.selecionarIndividuo(ag.populacao);
-                Individuo mae = Individuo.selecionarIndividuo(ag.populacao);
+
+                Individuo mae;
+                do {// Garante que a mãe seja diferente do pai
+                    mae = Individuo.selecionarIndividuo(ag.populacao);
+                } while (mae.equals(pai));
+
                 Individuo filho = Individuo.cruzamento(pai, mae);
                 Individuo.mutacao(filho, ag.taxaMutacao);
                 novaPopulacao.add(filho);
