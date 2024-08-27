@@ -2,9 +2,8 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class Individuo {
-    private int x;
-    private int y;
-    private double fitness;
+    private int x, y;
+    private double fitness, probabilidade;
 
     public Individuo(int x, int y, double fitness) {
         this.x = x;
@@ -24,6 +23,14 @@ public class Individuo {
         return y;
     }
 
+    public double getProbabilidade() {
+        return probabilidade;
+    }
+
+    public void setProbabilidade(double probabilidade) {
+        this.probabilidade = probabilidade;
+    }
+
     public static Individuo criarIndividuoAleatorio() {
         Random random = new Random();
 
@@ -37,53 +44,118 @@ public class Individuo {
         return Math.sqrt(Math.pow(x, 3) + 2 * Math.pow(y, 4));
     }
 
-    // Seleção dos melhores indivíduos aleatórios para cruzamento
-    public static Individuo selecionarIndividuo(ArrayList<Individuo> populacao) {
+    public static ArrayList<Individuo> calcularProbabilidades(ArrayList<Individuo> populacao) {
+        double somaInversoFitness = 0.0;
+        final double VALOR_MINIMO_FITNESS = 0.0001; // Valor mínimo para evitar divisão por zero
+
+        // Calcula a soma dos inversos dos fitness, com tratamento para fitness zero
+        for (Individuo individuo : populacao) {
+            double fitness = individuo.getFitness();
+            if (fitness <= 0) {
+                // Se o fitness for zero ou negativo, trata como um valor muito pequeno
+                fitness = VALOR_MINIMO_FITNESS;
+            }
+            somaInversoFitness += 1.0 / fitness;
+        }
+
+        // Calcula a probabilidade de cada indivíduo e a define
+        for (Individuo individuo : populacao) {
+            double fitness = individuo.getFitness();
+            if (fitness <= 0) {
+                // Se o fitness for zero ou negativo, trata como um valor muito pequeno
+                fitness = VALOR_MINIMO_FITNESS;
+            }
+            double probabilidade = (1.0 / fitness) / somaInversoFitness;
+            individuo.setProbabilidade(probabilidade * 100); // Multiplique por 100 para probabilidade em percentual
+                                                             // (opcional)
+        }
+
+        return populacao;
+    }
+
+    public static Individuo selecionarIndividuoPorProbabilidade(ArrayList<Individuo> populacao) {
         Random random = new Random();
-        Individuo individuo1;
-        Individuo individuo2;
+        double somaProbabilidades = 0.0;
 
-        // Seleciona o primeiro indivíduo aleatoriamente
-        individuo1 = populacao.get(random.nextInt(populacao.size()));
-        // System.out.println("Individuo 1: " + individuo1.getX() + " " + individuo1.getY());
+        // Soma total das probabilidades
+        for (Individuo individuo : populacao) {
+            somaProbabilidades += individuo.getProbabilidade();
+        }
 
-        // Seleciona o segundo indivíduo aleatoriamente, garantindo que seja diferente do primeiro
-        do {
-            individuo2 = populacao.get(random.nextInt(populacao.size()));
-        } while (individuo2.equals(individuo1));
+        if (somaProbabilidades <= 0) {
+            // Retorna um indivíduo aleatório
+            return populacao.get(random.nextInt(populacao.size()));
+        }
 
-        // System.out.println("Individuo 2: " + individuo2.getX() + " " + individuo2.getY());
+        // Entre 0 e a soma das probabilidades
+        double valorAleatorio = random.nextDouble() * somaProbabilidades;
 
-        // Retorna o melhor indivíduo com base no fitness
-        return (individuo1.getFitness() < individuo2.getFitness()) ? individuo1 : individuo2;
+        double somaParcial = 0.0;
+
+        // Seleciona o indivíduo baseado na roleta proporcional
+        for (Individuo individuo : populacao) {
+            somaParcial += individuo.getProbabilidade();
+            if (somaParcial >= valorAleatorio) {
+                return individuo;
+            }
+        }
+
+        // Caso não encontre (teoricamente não deveria acontecer), retorne o último
+        // indivíduo
+        return populacao.get(populacao.size() - 1);
     }
 
     public static Individuo cruzamento(Individuo pai, Individuo mae) {
         Random random = new Random();
-        int pontoCorte = random.nextInt(3) + 1; // Ponto de corte entre 1 e 3
 
-        int xFilho = (pai.getX() & (7 << pontoCorte)) | (mae.getX() & ~(7 << pontoCorte));
-        int yFilho = (pai.getY() & (7 << pontoCorte)) | (mae.getY() & ~(7 << pontoCorte));
+        // Gera um ponto de corte aleatório entre 0 e 2 (para 3 bits)
+        int pontoDeCorte = random.nextInt(3);
 
+        // Obtém os cromossomos dos pais
+        int xPai = pai.getX();
+        int xMae = mae.getX();
+        int yPai = pai.getY();
+        int yMae = mae.getY();
+
+        // Cruzamento por ponto de corte para x
+        int xFilho = (xPai & ((1 << pontoDeCorte) - 1)) | (xMae & ~((1 << pontoDeCorte) - 1));
+
+        // Cruzamento por ponto de corte para y
+        int yFilho = (yPai & ((1 << pontoDeCorte) - 1)) | (yMae & ~((1 << pontoDeCorte) - 1));
+
+        // Cria um novo indivíduo com os cromossomos cruzados
         return new Individuo(xFilho, yFilho, funcaoXY(xFilho, yFilho));
     }
 
-    // Aplica a mutação em um indivíduo
     public static void mutacao(Individuo individuo, double taxaMutacao) {
         Random random = new Random();
 
-        // Verifica se a mutação deve ser aplicada
         if (random.nextDouble() < taxaMutacao) {
             System.out.println("Mutação aplicada!");
 
-            // Aplica a mutação em x e y (bit flip)
-            int xMutado = individuo.getX() ^ (1 << random.nextInt(3)); // Muta um dos bits de x
-            int yMutado = individuo.getY() ^ (1 << random.nextInt(3)); // Muta um dos bits de y
+            boolean mutarX = random.nextBoolean();
 
-            // Atualiza os valores mutados
-            individuo.setX(xMutado);
-            individuo.setY(yMutado);
-            individuo.setFitness(funcaoXY(xMutado, yMutado));
+            if (mutarX) {// Aplica a mutação em x
+
+                int x = individuo.getX();
+                int bitIndex = random.nextInt(3);
+                x ^= (1 << bitIndex);
+
+                // Garante que o valor de x esteja dentro do intervalo permitido
+                x = Math.max(0, Math.min(x, 7));
+
+                individuo.setX(x);
+            } else {
+                int y = individuo.getY();
+                int bitIndex = random.nextInt(3);
+                y ^= (1 << bitIndex);
+
+                y = Math.max(0, Math.min(y, 7));
+
+                // Atualiza o valor mutado
+                individuo.setY(y);
+            }
+            individuo.setFitness(funcaoXY(individuo.getX(), individuo.getY()));
         }
     }
 
