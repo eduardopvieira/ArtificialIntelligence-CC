@@ -2,22 +2,20 @@ import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args) {
-        AlgoritmoGenetico ag = new AlgoritmoGenetico(10, 15, 0.30);
+        AlgoritmoGenetico ag = new AlgoritmoGenetico(10, 15, 0.20);
 
         Individuo.calcularProbabilidades(ag.populacao);
-        // Imprime a primeira geração
+
         System.out.println("Primeira geração:");
         for (int index = 0; index < ag.populacao.size(); index++) {
             Individuo individuo = ag.populacao.get(index);
             System.out.println("Individuo " + index + " X=" + individuo.getX() + " Y=" + individuo.getY() + " fit="
-                    + individuo.getFitness() + " probabilidade: "+ individuo.getProbabilidade());
+                    + individuo.getFitness() + " probabilidade: " + individuo.getProbabilidade());
         }
 
-        // Itera por várias gerações
         for (int geracao = 0; geracao < ag.maxGeracoes; geracao++) {
             ArrayList<Individuo> novaPopulacao = new ArrayList<>();
 
-            // Seleção, cruzamento e mutação
             for (int i = 0; i < ag.populacaoInicial; i++) {
                 Individuo pai = Individuo.selecionarIndividuoPorProbabilidade(ag.populacao);
 
@@ -25,7 +23,6 @@ public class Main {
                 do { // Garante que a mãe seja diferente do pai
                     mae = Individuo.selecionarIndividuoPorProbabilidade(ag.populacao);
                 } while (mae.equals(pai));
-
 
                 Individuo filho = Individuo.cruzamento(pai, mae);
                 Individuo.mutacao(filho, ag.taxaMutacao);
@@ -39,7 +36,7 @@ public class Main {
             for (int index = 0; index < novaPopulacao.size(); index++) {
                 Individuo individuo = novaPopulacao.get(index);
                 System.out.println("Individuo " + index + " X=" + individuo.getX() + " Y=" + individuo.getY() + " fit="
-                        + individuo.getFitness() + " probabilidade: "+ individuo.getProbabilidade());
+                        + individuo.getFitness() + " probabilidade: " + individuo.getProbabilidade());
             }
 
             // Atualiza a população com a nova geração
