@@ -58,7 +58,6 @@ public class Individuo {
             somaInversoFitness += 1.0 / fitness;
         }
 
-        // Calcula a probabilidade de cada indivíduo e a define
         for (Individuo individuo : populacao) {
             double fitness = individuo.getFitness();
             if (fitness <= 0) {
@@ -66,8 +65,7 @@ public class Individuo {
                 fitness = VALOR_MINIMO_FITNESS;
             }
             double probabilidade = (1.0 / fitness) / somaInversoFitness;
-            individuo.setProbabilidade(probabilidade * 100); // Multiplique por 100 para probabilidade em percentual
-                                                             // (opcional)
+            individuo.setProbabilidade(probabilidade * 100); // em percentual
         }
 
         return populacao;
@@ -77,13 +75,12 @@ public class Individuo {
         Random random = new Random();
         double somaProbabilidades = 0.0;
 
-        // Soma total das probabilidades
         for (Individuo individuo : populacao) {
             somaProbabilidades += individuo.getProbabilidade();
         }
 
         if (somaProbabilidades <= 0) {
-            // Retorna um indivíduo aleatório
+            // Retorna um qualquer
             return populacao.get(random.nextInt(populacao.size()));
         }
 
@@ -92,36 +89,42 @@ public class Individuo {
 
         double somaParcial = 0.0;
 
-        // Seleciona o indivíduo baseado na roleta proporcional
+        // Seleciona o indivíduo baseado na roleta de probabilidades
         for (Individuo individuo : populacao) {
             somaParcial += individuo.getProbabilidade();
             if (somaParcial >= valorAleatorio) {
                 return individuo;
             }
         }
+        // Isso aumenta a chance de retornar os individos que tem probabilidade maior
 
-        // Caso não encontre (teoricamente não deveria acontecer), retorne o último
-        // indivíduo
-        return populacao.get(populacao.size() - 1);
+        // Exception do acaso, aleatório
+        return populacao.get(random.nextInt(populacao.size()));
     }
 
     public static Individuo cruzamento(Individuo pai, Individuo mae) {
         Random random = new Random();
 
-        // Gera um ponto de corte aleatório entre 0 e 2 (para 3 bits)
-        int pontoDeCorte = random.nextInt(3);
+        // Gera um ponto de corte aleatório entre 1 a 2 (garantir que usa bits dos dois
+        // pais)
+        int pontoDeCorte = random.nextInt(2) + 1;
 
-        // Obtém os cromossomos dos pais
+        // Cromossomos dos pais
         int xPai = pai.getX();
         int xMae = mae.getX();
         int yPai = pai.getY();
         int yMae = mae.getY();
 
-        // Cruzamento por ponto de corte para x
-        int xFilho = (xPai & ((1 << pontoDeCorte) - 1)) | (xMae & ~((1 << pontoDeCorte) - 1));
+        int mascaraPontoDeCorte = (1 << pontoDeCorte) - 1; // Ou a máscara é 001 ou 110
 
-        // Cruzamento por ponto de corte para y
-        int yFilho = (yPai & ((1 << pontoDeCorte) - 1)) | (yMae & ~((1 << pontoDeCorte) - 1));
+        int parteXDoPai = xPai & mascaraPontoDeCorte;
+        int parteYDoPai = yPai & mascaraPontoDeCorte;
+
+        int parteXDaMae = xMae & ~mascaraPontoDeCorte;
+        int parteYDaMae = yMae & ~mascaraPontoDeCorte;
+
+        int xFilho = parteXDoPai | parteXDaMae;
+        int yFilho = parteYDoPai | parteYDaMae;
 
         // Cria um novo indivíduo com os cromossomos cruzados
         return new Individuo(xFilho, yFilho, funcaoXY(xFilho, yFilho));
@@ -140,6 +143,8 @@ public class Individuo {
                 int x = individuo.getX();
                 int bitIndex = random.nextInt(3);
                 x ^= (1 << bitIndex);
+
+                // 001 010 100 com Xor modifica um de alguma posição
 
                 // Garante que o valor de x esteja dentro do intervalo permitido
                 x = Math.max(0, Math.min(x, 7));
