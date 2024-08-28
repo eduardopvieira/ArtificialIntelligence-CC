@@ -1,17 +1,30 @@
 import java.util.ArrayList;
+import java.util.Comparator;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.ui.ApplicationFrame;
+import org.jfree.ui.RefineryUtilities;
 
-public class Main {
+public class Main extends ApplicationFrame {
+
+    public Main(String title) {
+        super(title);
+    }
+
     public static void main(String[] args) {
-        AlgoritmoGenetico ag = new AlgoritmoGenetico(10, 15, 0.20);
+        AlgoritmoGenetico ag = new AlgoritmoGenetico(10, 15, 0.10);
 
         Individuo.calcularProbabilidades(ag.populacao);
 
         System.out.println("Primeira geração:");
-        for (int index = 0; index < ag.populacao.size(); index++) {
-            Individuo individuo = ag.populacao.get(index);
-            System.out.println("Individuo " + index + " X=" + individuo.getX() + " Y=" + individuo.getY() + " fit="
-                    + individuo.getFitness() + " probabilidade: " + individuo.getProbabilidade());
-        }
+        imprimirPopulacao(ag.populacao);
+
+        ArrayList<Individuo> melhoresIndividuos = new ArrayList<>();
+        Individuo melhorInicial = menorFitness(ag.populacao);
+        melhoresIndividuos.add(melhorInicial);
 
         for (int geracao = 0; geracao < ag.maxGeracoes; geracao++) {
             ArrayList<Individuo> novaPopulacao = new ArrayList<>();
@@ -20,7 +33,7 @@ public class Main {
                 Individuo pai = Individuo.selecionarIndividuoPorProbabilidade(ag.populacao);
 
                 Individuo mae;
-                do { // Garante que a mãe seja diferente do pai
+                do {
                     mae = Individuo.selecionarIndividuoPorProbabilidade(ag.populacao);
                 } while (mae.equals(pai));
 
@@ -30,33 +43,56 @@ public class Main {
             }
 
             System.out.println("Nova geração:");
-
             Individuo.calcularProbabilidades(novaPopulacao);
-
-            for (int index = 0; index < novaPopulacao.size(); index++) {
-                Individuo individuo = novaPopulacao.get(index);
-                System.out.println("Individuo " + index + " X=" + individuo.getX() + " Y=" + individuo.getY() + " fit="
-                        + individuo.getFitness() + " probabilidade: " + individuo.getProbabilidade());
-            }
+            imprimirPopulacao(novaPopulacao);
 
             // Atualiza a população com a nova geração
             ag.populacao = novaPopulacao;
 
             // Encontra e exibe o melhor indivíduo da geração atual
             Individuo superman = menorFitness(ag.populacao);
+            melhoresIndividuos.add(superman);
             System.out.println("Geração " + geracao + ": Melhor Fitness = " + superman.getFitness() + " para x = "
                     + superman.getX() + ", y = " + superman.getY());
+        }
+
+        // Plota os melhores indivíduos de cada geração
+        plotarMelhoresIndividuos(melhoresIndividuos);
+    }
+
+    private static void imprimirPopulacao(ArrayList<Individuo> populacao) {
+        for (int index = 0; index < populacao.size(); index++) {
+            Individuo individuo = populacao.get(index);
+            System.out.println("Individuo " + index + " X=" + individuo.getX() + " Y=" + individuo.getY() + " fit="
+                    + individuo.getFitness() + " probabilidade: " + individuo.getProbabilidade());
         }
     }
 
     public static Individuo menorFitness(ArrayList<Individuo> populacao) {
-        Individuo superman = populacao.get(0);
-        for (int i = 1; i < populacao.size(); i++) {
-            Individuo individuo = populacao.get(i);
-            if (individuo.getFitness() < superman.getFitness()) {
-                superman = individuo;
-            }
+        return populacao.stream().min(Comparator.comparingDouble(Individuo::getFitness)).orElseThrow();
+    }
+
+    public static void plotarMelhoresIndividuos(ArrayList<Individuo> melhoresIndividuos) {
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        for (int i = 0; i < melhoresIndividuos.size(); i++) {
+            Individuo individuo = melhoresIndividuos.get(i);
+            dataset.addValue(individuo.getFitness(), "Fitness", Integer.toString(i));
         }
-        return superman;
+    
+        JFreeChart lineChart = ChartFactory.createLineChart(
+                "Melhores Individuos por Geracao",
+                "Geração",
+                "Fitness",
+                dataset,
+                PlotOrientation.VERTICAL,
+                true, true, false);
+    
+        Main chart = new Main("Algoritmo Genético");
+        ChartPanel chartPanel = new ChartPanel(lineChart);
+        chartPanel.setPreferredSize(new java.awt.Dimension(800, 600));
+        chart.setContentPane(chartPanel);
+        chart.pack();
+        RefineryUtilities.centerFrameOnScreen(chart);
+        chart.setVisible(true);
     }
 }
